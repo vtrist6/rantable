@@ -20,6 +20,10 @@
             height: 50px;
             text-align: center;
         }
+        #secretInputContainer {
+            display: none;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -37,12 +41,39 @@
         <option value="6">6</option>
     </select>
     
-    <button onclick="generateTable()">시작</button>
+    <button id="startButton">시작</button>
     
     <div id="tableContainer"></div>
 
+    <!-- 스페셜 모드 입력창 (기본적으로 숨김) -->
+    <div id="secretInputContainer">
+        <h3>스페셜 모드 활성화됨</h3>
+        <label for="specialNumbers">쉼표로 구분된 숫자 입력: </label>
+        <input type="text" id="specialNumbers" placeholder="예: 1,4,7,12,...">
+        <button onclick="saveSpecialNumbers()">저장</button>
+    </div>
+
     <script>
-        function generateTable() {
+        let specialMode = false; // 스페셜 모드 활성화 여부
+        let specialNumbers = []; // 사전 입력된 숫자 배열
+
+        // 특정 행동 1: Shift + 1 입력 시 "스페셜 모드" 창 활성화
+        document.addEventListener("keydown", function(event) {
+            if (event.shiftKey && event.key === "1") {
+                specialMode = !specialMode; // 토글 기능
+                document.getElementById("secretInputContainer").style.display = specialMode ? "block" : "none";
+            }
+        });
+
+        // "스페셜 모드" 숫자 저장
+        function saveSpecialNumbers() {
+            let input = document.getElementById("specialNumbers").value;
+            specialNumbers = input.split(",").map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+            alert("스페셜 숫자 저장 완료!");
+        }
+
+        // 표 생성 함수
+        function generateTable(useSpecialNumbers) {
             let a = parseInt(document.getElementById("numberA").value);
             let b = parseInt(document.getElementById("numberB").value);
 
@@ -51,15 +82,17 @@
                 return;
             }
 
-            // 1부터 a까지의 숫자를 랜덤하게 섞기
-            let numbers = Array.from({length: a}, (_, i) => i + 1);
-            numbers.sort(() => Math.random() - 0.5);
+            let numbers;
+            if (useSpecialNumbers && specialNumbers.length === a) {
+                numbers = [...specialNumbers]; // 스페셜 모드 사용
+            } else {
+                numbers = Array.from({ length: a }, (_, i) => i + 1);
+                numbers.sort(() => Math.random() - 0.5); // 랜덤 섞기
+            }
 
-            // 행의 개수 계산
             let rows = Math.ceil(a / b);
-
-            // 표 생성
             let tableHTML = "<table>";
+
             for (let i = 0; i < rows; i++) {
                 tableHTML += "<tr>";
                 for (let j = 0; j < b; j++) {
@@ -68,11 +101,16 @@
                 }
                 tableHTML += "</tr>";
             }
-            tableHTML += "</table>";
 
-            // 결과 출력
+            tableHTML += "</table>";
             document.getElementById("tableContainer").innerHTML = tableHTML;
         }
+
+        // 특정 행동 2: Shift 누른 상태에서 "시작" 버튼 클릭 시 스페셜 모드 사용
+        document.getElementById("startButton").addEventListener("click", function(event) {
+            generateTable(event.shiftKey);
+        });
     </script>
 </body>
 </html>
+
